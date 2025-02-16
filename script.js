@@ -95,13 +95,111 @@ function initializeChatbot() {
   }
 }
 
+// Global state for bin data and user points
+let binData = {
+  green: { fullness: 0 },
+  blue: { fullness: 0 },
+  red: { fullness: 0 },
+  yellow: { fullness: 0 },
+};
+
+let userPoints = 0;
+
+// Load saved data from localStorage
+function loadSavedData() {
+  const savedBinData = localStorage.getItem("binData");
+  const savedUserPoints = localStorage.getItem("userPoints");
+
+  if (savedBinData) {
+    binData = JSON.parse(savedBinData);
+  }
+  if (savedUserPoints) {
+    userPoints = parseInt(savedUserPoints, 10);
+  }
+}
+
+// Save data to localStorage
+function saveData() {
+  localStorage.setItem("binData", JSON.stringify(binData));
+  localStorage.setItem("userPoints", userPoints.toString());
+}
+
+// Update bin fullness and collection schedule
+function updateBinFullness(category) {
+  switch (category) {
+    case "Organic":
+      binData.green.fullness += 10;
+      break;
+    case "Recyclable":
+      binData.blue.fullness += 10;
+      break;
+    case "Hazardous":
+      binData.red.fullness += 10;
+      break;
+    case "E-Waste":
+      binData.yellow.fullness += 10;
+      break;
+    default:
+      break;
+  }
+  updateBinData();
+  saveData(); // Save updated bin data
+}
+
+// Reset bin fullness
+function resetBinFullness() {
+  binData.green.fullness = 0;
+  binData.blue.fullness = 0;
+  binData.red.fullness = 0;
+  binData.yellow.fullness = 0;
+  updateBinData();
+  saveData(); // Save reset bin data
+}
+
+// Update collection schedule based on bin fullness
+function updateCollectionSchedule(binId, fullness) {
+  if (fullness >= 80) {
+    return `Collection scheduled for <strong>tomorrow at 9 AM</strong>.`;
+  } else if (fullness >= 50) {
+    return `Collection scheduled for <strong>this Friday at 9 AM</strong>.`;
+  } else {
+    return `No immediate collection needed.`;
+  }
+}
+
+// Update bin data in the DOM
+function updateBinData() {
+  for (const [bin, data] of Object.entries(binData)) {
+    const fullnessElement = document.getElementById(`${bin}-fullness`);
+    const scheduleElement = document.getElementById(`${bin}-schedule`);
+
+    if (fullnessElement && scheduleElement) {
+      fullnessElement.textContent = `${data.fullness}%`;
+      scheduleElement.innerHTML = updateCollectionSchedule(bin, data.fullness);
+    }
+  }
+}
+
+// Initialize bin data functionality
+function initializeBinData() {
+  loadSavedData(); // Load saved data from localStorage
+  updateBinData(); // Update DOM with loaded data
+
+  // Reset bin fullness when the reset button is clicked
+  const resetButton = document.getElementById("reset-collection");
+  if (resetButton) {
+    resetButton.addEventListener("click", resetBinFullness);
+  }
+}
+
+// Initialize waste classification
 function initializeWasteClassification() {
   if (!document.getElementById("webcam")) {
+    console.error("Webcam element not found!");
     return; // Exit if not on the AI Sorting page
   }
 
   let model;
-  let userPoints = 0;
 
   const webcamElement = document.getElementById("webcam");
   const canvasElement = document.getElementById("webcam-canvas");
@@ -121,9 +219,13 @@ function initializeWasteClassification() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       webcamElement.srcObject = stream;
-      console.log("Webcam accessed");
+      webcamElement.onloadedmetadata = () => {
+        console.log("Webcam accessed and video metadata loaded");
+        webcamElement.play();
+      };
     } catch (error) {
       console.error("Error accessing webcam:", error);
+      alert("Unable to access webcam. Please ensure your webcam is connected and permissions are granted.");
     }
   }
 
@@ -158,6 +260,9 @@ function initializeWasteClassification() {
       <p><strong>Category:</strong> ${category}</p>
       <p><strong>Dispose in:</strong> ${bin}</p>
     `;
+
+    // Update bin fullness based on the waste category
+    updateBinFullness(category);
   }
 
   function getWasteCategoryAndBin(className) {
@@ -188,7 +293,11 @@ function initializeWasteClassification() {
 
   function incrementPoints() {
     userPoints += 10;
-    document.getElementById("user-points").textContent = userPoints;
+    const userPointsElement = document.getElementById("user-points");
+    if (userPointsElement) {
+      userPointsElement.textContent = userPoints;
+    }
+    saveData(); // Save updated points
     alert("+10 points for segregating waste!");
   }
 
@@ -197,23 +306,38 @@ function initializeWasteClassification() {
     await setupWebcam();
   }
 
-  captureButton.addEventListener("click", captureImage);
+  if (captureButton) {
+    captureButton.addEventListener("click", captureImage);
+  }
   init();
 }
-function initializeMobileMenu() {
-  const mobileMenu = document.getElementById("mobile-menu");
-  const navbarMenu = document.querySelector(".navbar__menu");
-  const dropdown = document.querySelector(".dropdown");
 
-  mobileMenu.addEventListener("click", () => {
-    navbarMenu.classList.toggle("active");
-  });
+// Initialize rewards page functionality
+function initializeRewardsPage() {
+  loadSavedData(); // Load saved data from localStorage
 
-  dropdown.addEventListener("click", () => {
-    const dropdownMenu = dropdown.querySelector(".dropdown-menu");
-    dropdownMenu.classList.toggle("active");
-  });
+  // Update user points in the DOM
+  const userPointsElement = document.getElementById("user-points");
+  if (userPointsElement) {
+    userPointsElement.textContent = userPoints;
+  }
 }
+
+// Determine which page is being loaded and initialize the relevant functionality
+function initializePage() {
+  if (document.getElementById("webcam")) {
+    initializeWasteClassification();
+  }
+  if (document.getElementById("user-points")) {
+    initializeRewardsPage();
+  }
+  if (document.getElementById("green-fullness")) {
+    initializeBinData();
+  }
+}
+
+// Initialize the page
+initializePage();
 
 function initializeLeaderboard() {
   function updateLeaderboard() {
@@ -240,65 +364,7 @@ function initializeLeaderboard() {
   updateLeaderboard();
 }
 
-function initializeBinData() {
-  let binData = {
-    green: { fullness: 0 },
-    blue: { fullness: 0 },
-    red: { fullness: 0 },
-    yellow: { fullness: 0 },
-  };
 
-  function updateBinFullness(category) {
-    switch (category) {
-      case "Organic":
-        binData.green.fullness += 10;
-        break;
-      case "Recyclable":
-        binData.blue.fullness += 10;
-        break;
-      case "Hazardous":
-        binData.red.fullness += 10;
-        break;
-      case "E-Waste":
-        binData.yellow.fullness += 10;
-        break;
-      default:
-        break;
-    }
-    updateBinData();
-  }
-
-  function resetBinFullness() {
-    binData.green.fullness = 0;
-    binData.blue.fullness = 0;
-    binData.red.fullness = 0;
-    binData.yellow.fullness = 0;
-    updateBinData();
-  }
-
-  function updateCollectionSchedule(binId, fullness) {
-    if (fullness >= 80) {
-      return `Collection scheduled for <strong>tomorrow at 9 AM</strong>.`;
-    } else if (fullness >= 50) {
-      return `Collection scheduled for <strong>this Friday at 9 AM</strong>.`;
-    } else {
-      return `No immediate collection needed.`;
-    }
-  }
-
-  function updateBinData() {
-    for (const [bin, data] of Object.entries(binData)) {
-      const fullnessElement = document.getElementById(`${bin}-fullness`);
-      const scheduleElement = document.getElementById(`${bin}-schedule`);
-
-      fullnessElement.textContent = `${data.fullness}%`;
-      scheduleElement.innerHTML = updateCollectionSchedule(bin, data.fullness);
-    }
-  }
-
-  document.getElementById("reset-collection").addEventListener("click", resetBinFullness);
-  updateBinData();
-}
 
 function initializeLoginSignup() {
   const loginForm = document.getElementById("loginForm");
@@ -382,3 +448,9 @@ function initializeLoginSignup() {
   }
 }
 
+initializeChatbot();
+initializeWasteClassification();
+initializeLoginSignup();
+initializeMobileMenu();
+initializeLeaderboard();
+initializeBinData();
