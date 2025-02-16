@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar__container">
+            <a href="/" id="navbar__logo"><i class="fas fa-recycle"></i>Ecco</a>
+            <div class="navbar__toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <ul class="navbar__menu">
+                <li class="navbar__item">
+                    <a href="/" class="navbar__links">Home</a>
+                </li>
+                <li class="navbar__item dropdown">
+                    <a href="#features" class="navbar__links">Features <i class="fas fa-caret-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="owc.html">Optimized Waste Collection</a></li>
+                        <li><a href="aiws.html">AI-Powered Waste Sorting</a></li>
+                        <li><a href="wfuel.html">Waste to Fuel Conversion</a></li>
+                    </ul>
+                </li>
+                <li class="navbar__item">
+                    <a href="rewards.html" class="navbar__links">Rewards</a>
+                </li>
+                <li class="navbar__item" id="loginItem">
+                    <a href="login.html" class="navbar__links">Login</a>
+                </li>
+                <li class="navbar__item" id="signupItem">
+                    <a href="signup.html" class="navbar__links">Sign Up</a>
+                </li>
+                <li class="navbar__item" id="profileItem" style="display: none;">
+                    <a href="#" class="navbar__links"><i class="fas fa-user"></i></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="signup-container">
+        <div class="signup-box">
+          <h2>Create Account</h2>
+          <div id="signupMessage" class="message-container"></div>
+          <form id="signupForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Sign Up</button>
+          </form>
+          <p>Already have an account? <a href="login.html">Login</a></p>
+        </div>
+      </div>
+</body>
+</html>
