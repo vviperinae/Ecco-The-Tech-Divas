@@ -1,4 +1,5 @@
 # Ecco-The-Tech-Divas
+
 Ecco - Waste Management Platform
 Ecco is a waste management platform that leverages AI-powered waste sorting, optimized collection schedules, and a reward-based system to promote sustainability and efficient waste management.
 
@@ -35,3 +36,5 @@ MariaDB (for user data storage)
 
 APIs:
 OpenAI API (for chatbot functionality)
+
+Website Link: https://vviperinae.github.io/Ecco-The-Tech-Divas/
